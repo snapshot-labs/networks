@@ -7,8 +7,9 @@
     "serve": "vite preview"
   },
   "dependencies": {
+    "@ethersproject/abi": "^5.4.1",
+    "@ethersproject/contracts": "^5.4.1",
     "@ethersproject/providers": "^5.4.3",
-    "@snapshot-labs/snapshot.js": "https://github.com/snapshot-labs/snapshot.js.git#master",
     "copy-to-clipboard": "^3.3.1",
     "vue": "^3.0.5"
   },

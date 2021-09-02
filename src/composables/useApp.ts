@@ -1,30 +1,76 @@
 import { ref, computed, reactive } from 'vue';
-import snapshot from '@snapshot-labs/snapshot.js';
-import networks from '@snapshot-labs/snapshot.js/src/networks.json'
+import { Contract } from '@ethersproject/contracts';
+import { Interface } from '@ethersproject/abi';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 
 const state = reactive({
   selectedNetwork: null,
   editNetwork: false,
+  editNetworkType: '',
   error: false,
   newNetworkObject: '',
-  networks
+  networks: {},
+  loading: true
 });
 
 function editNetworkButtonClick() {
-  state.editNetwork = !state.editNetwork;
+  state.editNetwork = true;
+  state.editNetworkType = 'selected';
   if (state.editNetwork) {
     state.newNetworkObject = JSON.stringify(state.networks[state.selectedNetwork.key], null, 2)
   }
 }
 
+function editNetworksJSONButtonClick() {
+  state.editNetwork = true;
+  state.editNetworkType = 'full';
+  if (state.editNetwork) {
+    state.newNetworkObject = JSON.stringify(state.networks, null, 2)
+  }
+}
+
 function changeNetworksObject() {
   try {
-    state.networks[state.selectedNetwork.key] = JSON.parse(state.newNetworkObject)
-    selectNetwork(state.selectedNetwork.key);
+    if(state.editNetworkType === 'full') {
+      state.networks = JSON.parse(state.newNetworkObject)
+      selectNetwork(state.selectedNetwork.key);
+    } else {
+      state.networks[state.selectedNetwork.key] = JSON.parse(state.newNetworkObject)
+      selectNetwork(state.selectedNetwork.key);
+    }
   } catch (error) {
     console.log(error.message)
     state.error = error.message
+  }
+}
+
+async function multicall(
+  network: string,
+  provider,
+  abi: any[],
+  calls: any[],
+  options?
+) {
+  const multicallAbi = [
+    'function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)'
+  ];
+  const multi = new Contract(
+    state.networks[network].multicall,
+    multicallAbi,
+    provider
+  );
+  const itf = new Interface(abi);
+  try {
+    const [, res] = await multi.aggregate(
+      calls.map((call) => [
+        call[0].toLowerCase(),
+        itf.encodeFunctionData(call[1], call[2])
+      ]),
+      options || {}
+    );
+    return res.map((call, i) => itf.decodeFunctionResult(calls[i][1], call));
+  } catch (e) {
+    return Promise.reject(e);
   }
 }
 
@@ -33,7 +79,7 @@ async function selectNetwork(networkKey) {
   state.error = false;
   state.editNetwork = false;
   state.newNetworkObject = '';
-  state.selectedNetwork = JSON.parse(JSON.stringify(networks[networkKey]));
+  state.selectedNetwork = JSON.parse(JSON.stringify(state.networks[networkKey]));
   const selectedNetwork = state.selectedNetwork;
   selectedNetwork.rpcStatus = JSON.parse(JSON.stringify(state.selectedNetwork.rpc)).map((rpc,
     index) => ({
@@ -49,7 +95,6 @@ async function selectNetwork(networkKey) {
     let errors = [];
 
     try {
-      // provider = snapshot.utils.getProvider(selectedNetwork.key, rpc.index)
       provider = new StaticJsonRpcProvider(rpc.url)
     } catch (error) {
       errors.push('Provider Error: ' + error.message)
@@ -95,7 +140,7 @@ async function selectNetwork(networkKey) {
       // Calculate avg. time for three multicalls
       for (const a of [1, 2, 3]) {
         const multicallStart = performance.now();
-        const response = await snapshot.utils.multicall(
+        const response = await multicall(
           selectedNetwork.key,
           provider,
           abi,
@@ -121,9 +166,24 @@ async function selectNetwork(networkKey) {
 }
 
 export function useApp() {
+  async function init() {
+    await getNetworks();
+    state.loading = false;
+  }
+
+  async function getNetworks() {
+    const networksObj: any = await fetch(
+      'https://raw.githubusercontent.com/snapshot-labs/snapshot.js/master/src/networks.json'
+    ).then(res => res.json());
+    state.networks = networksObj;
+    return networksObj;
+  }
+
   return {
+    init,
     selectNetwork,
     editNetworkButtonClick,
+    editNetworksJSONButtonClick,
     changeNetworksObject,
     app: computed(() => state)
   };
