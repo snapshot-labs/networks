@@ -112,7 +112,7 @@ async function selectNetwork(networkKey) {
 
     // Is archive node
     try {
-      fullArchiveNode = await provider.getBalance(state.selectedNetwork.multicall, 0);
+      fullArchiveNode = await provider.getBalance(state.selectedNetwork.multicall, 1);
       // @ts-ignore
       fullArchiveNode = fullArchiveNode >= 0 ? 'Yes' : 'No';
     } catch (error) {
