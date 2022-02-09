@@ -2,6 +2,10 @@ import { ref, computed, reactive } from 'vue';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { multicall } from '../helpers/utils';
 
+const abi = [
+  'function getEthBalance(address addr) view returns (uint256 balance)'
+]
+
 const state = reactive({
   selectedNetwork: null,
   editNetwork: false,
@@ -118,13 +122,10 @@ async function selectNetwork(networkKey) {
       loading: false
     }
   }
-  // Multicall and node limit check
+  // Multicall
   for(const rpc of selectedNetwork.rpcStatus) {
     const rpcID = JSON.stringify(rpc.url);
     const provider = providers[rpcID]?.provider;
-    const abi = [
-      'function getEthBalance(address addr) view returns (uint256 balance)'
-    ]
 
     if(provider) {
       // Multicall
@@ -156,41 +157,47 @@ async function selectNetwork(networkKey) {
         rpc.status.errors.push('multicall Error: ' + error.message)
         console.log('multicall', error);
       }
-
-      // Check node limit
-      if(rpc.status.multicall !== 'ERROR!') {
-        let numberOfAddress = 3000;
-        let nodeLimit = 0;
-        while(true) {
-          try {
-            rpc.status.nodeLimit = 'checking with ' + numberOfAddress + ' addresses'
-            const response = await multicall(
-              state.networks[selectedNetwork.key],
-              provider,
-              abi,
-              state.addresses.slice(0, numberOfAddress).map((address) => [
-                selectedNetwork.multicall,
-                'getEthBalance',
-                [address]
-              ]), {
-                blockTag: 'latest'
-              }
-            );
-            nodeLimit = response.length
-            break;
-          } catch (error) {
-            numberOfAddress -= 200;
-            if(numberOfAddress <= 0){
-              rpc.status.nodeLimit = 'ERROR!'
-              break;
-            }
-          }
-        }
-        rpc.status.nodeLimit = nodeLimit
-      }
     } else {
         rpc.status.multicall = 'ERROR!'
         rpc.status.nodeLimit = 'ERROR!'
+    }
+  }
+
+  // Check node limit
+  for(const rpc of selectedNetwork.rpcStatus) {
+    const rpcID = JSON.stringify(rpc.url);
+    const provider = providers[rpcID]?.provider;
+    
+    // Check node limit
+    if(rpc.status.multicall !== 'ERROR!' && rpc.status.nodeLimit !== 'ERROR!') {
+      let numberOfAddress = 3000;
+      let nodeLimit = 0;
+      while(true) {
+        try {
+          rpc.status.nodeLimit = 'checking with ' + numberOfAddress + ' addresses'
+          const response = await multicall(
+            state.networks[selectedNetwork.key],
+            provider,
+            abi,
+            state.addresses.slice(0, numberOfAddress).map((address) => [
+              selectedNetwork.multicall,
+              'getEthBalance',
+              [address]
+            ]), {
+              blockTag: 'latest'
+            }
+          );
+          nodeLimit = response.length
+          break;
+        } catch (error) {
+          numberOfAddress -= 200;
+          if(numberOfAddress <= 0){
+            rpc.status.nodeLimit = 'ERROR!'
+            break;
+          }
+        }
+      }
+      rpc.status.nodeLimit = nodeLimit
     }
   }
 }
