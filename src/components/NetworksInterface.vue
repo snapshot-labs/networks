@@ -1,5 +1,5 @@
 <template>
-  <div class="flex mt-4 mb-10" v-cloak>
+  <div class="flex" v-cloak>
     <NetworkSelect />
     <div class="flex-auto p-4">
       <h3 class="text-xl font-blod" v-if="!app.selectedNetwork">
