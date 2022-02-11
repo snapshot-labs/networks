@@ -65,7 +65,7 @@
                 Multicall Avg. Time
               </th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Node limit (max 3000 addresses)
+                Node limit (max 10000 addresses)
               </th>
             </tr>
           </thead>
@@ -119,16 +119,12 @@
                 </h2>
               </td>
               <td class="p-2 border-b-1 border-gray-600 text-center" v-if="!rpc.status.loading">
-                <h2 class="title-font font-medium text-2xl text-gray-900" v-if="
-                  typeof rpc.status.nodeLimit === 'number' || 
-                  rpc.status.nodeLimit === 'ERROR!' ||
-                  rpc.status.nodeLimit === '...'
-                ">
-                  {{rpc.status.nodeLimit}}
-                </h2>
-                <div class="title-font text-xs text-gray-600" v-else>
+                <div class="title-font text-xs text-gray-600" v-if="typeof rpc.status.nodeLimit === 'string' && rpc.status.nodeLimit.startsWith('checking')">
                   {{rpc.status.nodeLimit}}
                 </div>
+                <h2 class="title-font font-medium text-2xl text-gray-900" v-else>
+                  {{rpc.status.nodeLimit}}
+                </h2>
               </td>
             </tr>
             <AddRPC />

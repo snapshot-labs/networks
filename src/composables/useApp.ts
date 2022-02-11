@@ -1,6 +1,7 @@
 import { ref, computed, reactive } from 'vue';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { multicall } from '../helpers/utils';
+import exampleAddresses from '../assets/addresses.json';
 
 const abi = [
   'function getEthBalance(address addr) view returns (uint256 balance)'
@@ -73,7 +74,9 @@ async function selectNetwork(networkKey) {
 
     try {
       providers[rpcID] = {}
-      providers[rpcID].provider = new StaticJsonRpcProvider(rpc.url)
+      const connectionInfo = typeof rpc.url === 'object' ? {...rpc.url, timeout: 25000} : {url:  rpc.url, timeout: 25000};
+      providers[rpcID].provider = new StaticJsonRpcProvider(connectionInfo);
+      // providers[rpcID].provider = new StaticJsonRpcProvider(rpc.url)
       provider = providers[rpcID].provider;
     } catch (error) {
       errors.push('Provider Error: ' + error.message)
@@ -164,22 +167,26 @@ async function selectNetwork(networkKey) {
   }
 
   // Check node limit
-  for(const rpc of selectedNetwork.rpcStatus) {
+  // for(const rpc of selectedNetwork.rpcStatus) {
+  selectedNetwork.rpcStatus.forEach(async rpc => {
     const rpcID = JSON.stringify(rpc.url);
     const provider = providers[rpcID]?.provider;
     
     // Check node limit
     if(rpc.status.multicall !== 'ERROR!' && rpc.status.nodeLimit !== 'ERROR!') {
-      let numberOfAddress = 3000;
+      let upperLimit = 10000;
+      let lowerLimit = 0;
       let nodeLimit = 0;
       while(true) {
+        const checkWith = Math.ceil((upperLimit + lowerLimit) / 2);
+        console.log(rpc, upperLimit, lowerLimit, checkWith)
+        rpc.status.nodeLimit = 'checking with ' + checkWith + ' addresses'
         try {
-          rpc.status.nodeLimit = 'checking with ' + numberOfAddress + ' addresses'
           const response = await multicall(
             state.networks[selectedNetwork.key],
             provider,
             abi,
-            state.addresses.slice(0, numberOfAddress).map((address) => [
+            exampleAddresses.slice(0, checkWith).map((address) => [
               selectedNetwork.multicall,
               'getEthBalance',
               [address]
@@ -187,19 +194,24 @@ async function selectNetwork(networkKey) {
               blockTag: 'latest'
             }
           );
-          nodeLimit = response.length
-          break;
-        } catch (error) {
-          numberOfAddress -= 200;
-          if(numberOfAddress <= 0){
-            rpc.status.nodeLimit = 'ERROR!'
+          if(response.length === checkWith) {
+            if(response.length === 10000 || (upperLimit - lowerLimit) <= 100) {
+              nodeLimit = response.length;
+              break;
+            }
+            lowerLimit = checkWith;
+          } else {
+            nodeLimit = response.length;
             break;
           }
+        } catch (error) {
+          console.log(error)
+          upperLimit = checkWith;
         }
       }
-      rpc.status.nodeLimit = nodeLimit
+      rpc.status.nodeLimit = '~' + nodeLimit
     }
-  }
+  });
 }
 
 export function useApp() {
