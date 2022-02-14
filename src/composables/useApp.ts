@@ -1,7 +1,11 @@
 import { ref, computed, reactive } from 'vue';
-import { Contract } from '@ethersproject/contracts';
-import { Interface } from '@ethersproject/abi';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { multicall } from '../helpers/utils';
+import exampleAddresses from '../assets/addresses.json';
+
+const abi = [
+  'function getEthBalance(address addr) view returns (uint256 balance)'
+]
 
 const state = reactive({
   selectedNetwork: null,
@@ -10,6 +14,7 @@ const state = reactive({
   error: false,
   newNetworkObject: '',
   networks: {},
+  addresses: [],
   loading: true
 });
 
@@ -44,35 +49,6 @@ function changeNetworksObject() {
   }
 }
 
-async function multicall(
-  network: string,
-  provider,
-  abi: any[],
-  calls: any[],
-  options?
-) {
-  const multicallAbi = [
-    'function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)'
-  ];
-  const multi = new Contract(
-    state.networks[network].multicall,
-    multicallAbi,
-    provider
-  );
-  const itf = new Interface(abi);
-  try {
-    const [, res] = await multi.aggregate(
-      calls.map((call) => [
-        call[0].toLowerCase(),
-        itf.encodeFunctionData(call[1], call[2])
-      ]),
-      options || {}
-    );
-    return res.map((call, i) => itf.decodeFunctionResult(calls[i][1], call));
-  } catch (e) {
-    return Promise.reject(e);
-  }
-}
 
 async function selectNetwork(networkKey) {
   state.selectedNetwork = null;
@@ -89,13 +65,19 @@ async function selectNetwork(networkKey) {
       loading: true
     }
   }))
+  const providers = {}
   for (const rpc of selectedNetwork.rpcStatus) {
+    const rpcID = JSON.stringify(rpc.url);
     let provider = null;
-    let latestBlockNumber, fullArchiveNode = '...';
+    let latestBlockNumber, fullArchiveNode, fullArchiveNodeStart = '...';
     let errors = [];
 
     try {
-      provider = new StaticJsonRpcProvider(rpc.url)
+      providers[rpcID] = {}
+      const connectionInfo = typeof rpc.url === 'object' ? {...rpc.url, timeout: 25000} : {url:  rpc.url, timeout: 25000};
+      providers[rpcID].provider = new StaticJsonRpcProvider(connectionInfo);
+      // providers[rpcID].provider = new StaticJsonRpcProvider(rpc.url)
+      provider = providers[rpcID].provider;
     } catch (error) {
       errors.push('Provider Error: ' + error.message)
       console.log('Provider Error', error)
@@ -121,62 +103,131 @@ async function selectNetwork(networkKey) {
       console.log('fullArchiveNode', error);
     }
 
+    // Is archive node (start block)
+    try {
+      fullArchiveNodeStart = await provider.getBalance(state.selectedNetwork.multicall, state.selectedNetwork.start);
+      // @ts-ignore
+      fullArchiveNodeStart = fullArchiveNodeStart >= 0 ? 'Yes' : 'No';
+    } catch (error) {
+      fullArchiveNodeStart = 'ERROR!';
+      errors.push('fullArchiveNodeStart Error: ' + error.message)
+      console.log('fullArchiveNodeStart', error);
+    }
+    
+
     rpc.status = {
       latestBlockNumber,
       fullArchiveNode,
+      fullArchiveNodeStart,
       errors,
       multicall: '...',
+      nodeLimit: '...',
       loading: false
     }
+  }
+  // Multicall
+  for(const rpc of selectedNetwork.rpcStatus) {
+    const rpcID = JSON.stringify(rpc.url);
+    const provider = providers[rpcID]?.provider;
 
-    try {
-      const abi = [
-        'function aggregate(tuple(address target, bytes callData)[] calls) view returns (uint256 blockNumber, bytes[] returnData)',
-        'function getEthBalance(address addr) view returns (uint256 balance)'
-      ]
-      const addresses = [selectedNetwork.multicall];
-      let multicallAvgTime = 0;
-
-      // Calculate avg. time for three multicalls
-      for (const a of [1, 2, 3]) {
-        const multicallStart = performance.now();
-        const response = await multicall(
-          selectedNetwork.key,
-          provider,
-          abi,
-          addresses.map((address) => [
-            selectedNetwork.multicall,
-            'getEthBalance',
-            [address]
-          ]), {
-            blockTag: 'latest'
-          }
-        );
-        const multicallEnd = performance.now();
-        multicallAvgTime += (multicallEnd - multicallStart);
+    if(provider) {
+      // Multicall
+      try {
+        const addresses = [selectedNetwork.multicall];
+        let multicallAvgTime = 0;
+        // Calculate avg. time for three multicalls
+        for (const a of [1, 2, 3]) {
+          const multicallStart = performance.now();
+          const response = await multicall(
+            state.networks[selectedNetwork.key],
+            provider,
+            abi,
+            addresses.map((address) => [
+              selectedNetwork.multicall,
+              'getEthBalance',
+              [address]
+            ]), {
+              blockTag: 'latest'
+            }
+          );
+          const multicallEnd = performance.now();
+          multicallAvgTime += (multicallEnd - multicallStart);
+        }
+        rpc.status.multicall = (multicallAvgTime / 3).toFixed(2) + " ms"
+      } catch (error) {
+        rpc.status.multicall = 'ERROR!'
+        rpc.status.nodeLimit = 'ERROR!'
+        rpc.status.errors.push('multicall Error: ' + error.message)
+        console.log('multicall', error);
       }
-
-      rpc.status.multicall = (multicallAvgTime / 3).toFixed(2) + " ms"
-    } catch (error) {
-      rpc.status.multicall = 'ERROR!'
-      rpc.status.errors.push('multicall Error: ' + error.message)
-      console.log('multicall', error);
+    } else {
+        rpc.status.multicall = 'ERROR!'
+        rpc.status.nodeLimit = 'ERROR!'
     }
   }
+
+  // Check node limit
+  // for(const rpc of selectedNetwork.rpcStatus) {
+  selectedNetwork.rpcStatus.forEach(async rpc => {
+    const rpcID = JSON.stringify(rpc.url);
+    const provider = providers[rpcID]?.provider;
+    
+    // Check node limit
+    if(rpc.status.multicall !== 'ERROR!' && rpc.status.nodeLimit !== 'ERROR!') {
+      let upperLimit = 10000;
+      let lowerLimit = 0;
+      let nodeLimit = 0;
+      while(true) {
+        const checkWith = Math.ceil((upperLimit + lowerLimit) / 2);
+        console.log(rpc, upperLimit, lowerLimit, checkWith)
+        rpc.status.nodeLimit = 'checking with ' + checkWith + ' addresses'
+        try {
+          const response = await multicall(
+            state.networks[selectedNetwork.key],
+            provider,
+            abi,
+            exampleAddresses.slice(0, checkWith).map((address) => [
+              selectedNetwork.multicall,
+              'getEthBalance',
+              [address]
+            ]), {
+              blockTag: 'latest'
+            }
+          );
+          if(response.length === checkWith) {
+            if(response.length === 10000 || (upperLimit - lowerLimit) <= 100) {
+              nodeLimit = response.length;
+              break;
+            }
+            lowerLimit = checkWith;
+          } else {
+            nodeLimit = response.length;
+            break;
+          }
+        } catch (error) {
+          console.log(error)
+          upperLimit = checkWith;
+        }
+      }
+      rpc.status.nodeLimit = '~' + nodeLimit
+    }
+  });
 }
 
 export function useApp() {
   async function init() {
-    await getNetworks();
+    await getData();
     state.loading = false;
   }
 
-  async function getNetworks() {
-    const networksObj: any = await fetch(
+  async function getData() {
+    const [networksObj, addresses]: any = await Promise.all([fetch(
       'https://raw.githubusercontent.com/snapshot-labs/snapshot.js/master/src/networks.json'
-    ).then(res => res.json());
+    ).then(res => res.json()), fetch(
+      'https://raw.githubusercontent.com/snapshot-labs/snapshot-strategies/master/test/addresses.json'
+    ).then(res => res.json())]);
     state.networks = networksObj;
-    return networksObj;
+    state.addresses = addresses;
   }
 
   return {

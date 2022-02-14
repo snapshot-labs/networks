@@ -64,6 +64,9 @@
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Multicall Avg. Time
               </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Node limit (max 10000 addresses)
+              </th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
@@ -88,7 +91,7 @@
                   </div>
                 </div>
               </td>
-              <td v-if="rpc.status.loading" colspan="3" class="p-2 border-b-1 border-gray-600 text-center">
+              <td v-if="rpc.status.loading" colspan="4" class="p-2 border-b-1 border-gray-600 text-center">
                 <div class="animate-pulse flex">
                   <div class="h-4 bg-blue-400 rounded w-5/6"></div>
                 </div>
@@ -101,13 +104,26 @@
                 </a>
               </td>
               <td class="p-2 border-b-1 border-gray-600 text-center" v-if="!rpc.status.loading">
-                <h2 class="title-font font-medium text-2xl text-gray-900">
-                  {{rpc.status.fullArchiveNode}}
+                <h2 class="title-font font-medium text-gray-900">
+                  <div class="relative border-b-2 pb-1">
+                  {{rpc.status.fullArchiveNode}} <div class="text-xs text-gray-400"> 1st block </div>
+                  </div>
+                  <div class="pt-1">
+                  {{rpc.status.fullArchiveNodeStart}} <div class="text-xs text-gray-400"> Start block </div>
+                  </div>
                 </h2>
               </td>
               <td class="p-2 border-b-1 border-gray-600 text-center" v-if="!rpc.status.loading">
                 <h2 class="title-font font-medium text-2xl text-gray-900">
                   {{rpc.status.multicall}}
+                </h2>
+              </td>
+              <td class="p-2 border-b-1 border-gray-600 text-center" v-if="!rpc.status.loading">
+                <div class="title-font text-xs text-gray-600" v-if="typeof rpc.status.nodeLimit === 'string' && rpc.status.nodeLimit.startsWith('checking')">
+                  {{rpc.status.nodeLimit}}
+                </div>
+                <h2 class="title-font font-medium text-2xl text-gray-900" v-else>
+                  {{rpc.status.nodeLimit}}
                 </h2>
               </td>
             </tr>
@@ -126,7 +142,7 @@
               </svg>
             </div>
 
-            <div class="px-4 py-2 -mx-3">
+            <div class="px-4 py-2 -mx-3 max-w-4xl">
               <div class="mx-3">
                 <span class="font-semibold text-red-500 dark:text-red-400">Errors for: {{rpc.url}}</span>
                 <p class="text-sm text-gray-600 dark:text-gray-200 py-2" v-for="(error, index) in rpc.status.errors"
