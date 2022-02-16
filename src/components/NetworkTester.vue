@@ -1,21 +1,24 @@
 <template>
   <div v-if="app.selectedNetwork" class="mt-4">
     <div class="lg:flex lg:items-center lg:justify-between mb-4">
-      <div class="flex-1 min-w-0">
-        <h2 class="text-3xl">
-          {{app.selectedNetwork.name}}
-          <span v-if="app.selectedNetwork"
-            class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-            {{ app.selectedNetwork.key }}
-          </span>
-        </h2>
-        <div class="mt-1 flex flex-col sm:flex-row sm:flex-wrap sm:mt-0 sm:space-x-6">
-          <div class="mt-2 flex items-center text-sm text-gray-500">
-            Number of RPC: {{app.selectedNetwork.rpc.length}}
+      <div class="flex-1 flex min-w-0">
+        <img class="inline-block h-12 w-12 rounded-full ring-2 ring-white p-1" :src="'https://cloudflare-ipfs.com/ipfs/' + app.selectedNetwork.imageIPFS" alt=""/>
+        <div class="mt-1">
+          <h2 class="text-3xl">
+            {{app.selectedNetwork.name}}
+            <span v-if="app.selectedNetwork"
+              class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 align-middle	">
+              {{ app.selectedNetwork.key }}
+            </span>
+          </h2>
+          <div>
+            <div class="mt-2 flex items-center text-sm text-gray-500">
+              
+            </div>
           </div>
         </div>
       </div>
-      <div class="mt-5 flex">
+      <div class="flex">
         <button type="button" @click="editNetworkButtonClick"
           class="items-center px-4 py-2 mx-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
           Edit Network
@@ -51,20 +54,21 @@
       <div class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
+            <tr><th scope="col" class="px-6 py-1 pt-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" colspan="5">Number of Nodes - {{app.selectedNetwork.rpc.length}}</th></tr>
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                RPC
+              <th scope="col" class="px-6 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                RPC 
               </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Latest Block
               </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Full archive node
               </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Multicall Avg. Time
               </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th scope="col" class="px-6 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Node limit (max 10000 addresses)
               </th>
             </tr>
