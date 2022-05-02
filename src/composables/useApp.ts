@@ -57,14 +57,24 @@ async function selectNetwork(networkKey) {
   state.newNetworkObject = '';
   state.selectedNetwork = JSON.parse(JSON.stringify(state.networks[networkKey]));
   const selectedNetwork = state.selectedNetwork;
-  selectedNetwork.rpcStatus = JSON.parse(JSON.stringify(state.selectedNetwork.rpc)).map((rpc,
+  selectedNetwork.rpcStatus = [];
+  selectedNetwork.light?.length && selectedNetwork.rpcStatus.push(...selectedNetwork.light.map((rpc,
+    index) => ({
+    url: rpc,
+    index,
+    light: true,
+    status: {
+      loading: true
+    }
+  })));
+  selectedNetwork.rpcStatus.push(...selectedNetwork.rpc.map((rpc,
     index) => ({
     url: rpc,
     index,
     status: {
       loading: true
     }
-  }))
+  })));
   const providers = {}
   for (const rpc of selectedNetwork.rpcStatus) {
     const rpcID = JSON.stringify(rpc.url);
