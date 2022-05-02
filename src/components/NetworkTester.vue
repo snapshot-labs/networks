@@ -85,7 +85,7 @@
                         @click="app.networks[app.selectedNetwork.key].rpc = app.networks[app.selectedNetwork.key].rpc.filter(a => a !== rpc.url);selectNetwork(app.selectedNetwork.key)"
                         src="
                               data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABmJLR0QA/wD/AP+gvaeTAAAAZUlEQVRIiWNgGCmggYGB4T8a7iBGIyMWsf8UOgbFTCYKDSMbwIKBYvU09wGxFqC7kGgfDhofjFowasGoBRQAFiLVoRfr2Ip5rGDAgugplEavxXBhZD1EAT8GBoYnJFjwBKpnGAIAUcAmPA1WYN0AAAAASUVORK5CYII=" />
-                      <span v-if="rpc.light" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-500 text-white align-middle	">Light</span>
+                      <span v-if="rpc.light" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-500 text-white align-middle">Light</span>
                       <h3 class=" text-sm leading-6 font-medium text-gray-900" style="width: 500px;
                                   overflow: hidden;
                                   text-overflow: ellipsis;">
