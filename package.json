@@ -4,21 +4,33 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "eslint \"./src/*/**/*.{ts,vue,json}\" --fix"
   },
   "dependencies": {
     "@ethersproject/abi": "^5.4.1",
     "@ethersproject/contracts": "^5.4.1",
     "@ethersproject/providers": "^5.4.3",
     "copy-to-clipboard": "^3.3.1",
-    "vue": "^3.0.5"
+    "dom-to-image": "^2.6.0",
+    "vue": "^3.0.5",
+    "vue-router": "^4.0.14"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
     "@vitejs/plugin-vue": "^1.3.0",
     "@vue/compiler-sfc": "^3.0.5",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "@vue/eslint-config-typescript": "^9.0.0",
     "autoprefixer": "^10.3.1",
+    "eslint": "^8.14.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-vue": "^7.15.1",
     "postcss": "^8.3.6",
+    "prettier": "^2.6.2",
     "tailwindcss": "^2.2.7",
+    "typescript": "^4.6.4",
     "vite": "^2.4.4"
   }
 }
