@@ -26,3 +26,21 @@ export async function multicall(
     return Promise.reject(e);
   }
 }
+
+export function getUrl(uri, gateway = "cloudflare-ipfs.com") {
+  const ipfsGateway = `https://${gateway}`;
+  if (!uri) return null;
+  if (
+    !uri.startsWith("ipfs://") &&
+    !uri.startsWith("ipns://") &&
+    !uri.startsWith("https://") &&
+    !uri.startsWith("http://")
+  )
+    return `${ipfsGateway}/ipfs/${uri}`;
+  const uriScheme = uri.split("://")[0];
+  if (uriScheme === "ipfs")
+    return uri.replace("ipfs://", `${ipfsGateway}/ipfs/`);
+  if (uriScheme === "ipns")
+    return uri.replace("ipns://", `${ipfsGateway}/ipns/`);
+  return uri;
+}
