@@ -38,7 +38,7 @@ function editNetworksJSONButtonClick() {
   }
 }
 
-const checkBlockAndArchiveNode: any = async (selectedNetwork, provider) => {
+const checkBlockAndArchiveNode: any = async (selectedNetwork) => {
   const providers = {};
   for (const rpc of selectedNetwork.rpcStatus) {
     if (selectedNetwork.chainId !== state.selectedNetwork.chainId) continue;
@@ -125,7 +125,8 @@ const checkMulticallForAll = async (selectedNetwork, providers) => {
         const addresses = [selectedNetwork.multicall];
         let multicallAvgTime = 0;
         // Calculate avg. time for three multicalls
-        for (const a of [1, 2, 3]) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const _a of [1, 2, 3]) {
           const multicallStart = performance.now();
           await multicall(
             state.networks[selectedNetwork.key],
@@ -174,6 +175,7 @@ const checkNodeLimitForAll = async (selectedNetwork, providers) => {
       let upperLimit = 10000;
       let lowerLimit = 0;
       let nodeLimit = 0;
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         if (selectedNetwork.chainId !== state.selectedNetwork.chainId) break;
         const checkWith = Math.ceil((upperLimit + lowerLimit) / 2);
@@ -265,7 +267,7 @@ async function selectNetwork(networkKey) {
   let providers = {};
 
   // Check block and archive node
-  providers = await checkBlockAndArchiveNode(selectedNetwork, providers);
+  providers = await checkBlockAndArchiveNode(selectedNetwork);
 
   // Multicall
   await checkMulticallForAll(selectedNetwork, providers);

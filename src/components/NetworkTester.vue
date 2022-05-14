@@ -1,12 +1,10 @@
 <template>
-  <div v-if="app.selectedNetwork" class="mt-4 p-2 bg-white" id="networkTester" >
+  <div v-if="app.selectedNetwork" class="mt-4 p-2 bg-white" id="networkTester">
     <div class="lg:flex lg:items-center lg:justify-between mb-4">
       <div class="flex-1 flex min-w-0">
         <img
           class="inline-block h-12 w-12 rounded-full ring-2 ring-white p-1"
-          :src="
-            'https://cloudflare-ipfs.com/ipfs/' + app.selectedNetwork.imageIPFS
-          "
+          :src="getUrl(app.selectedNetwork.logo)"
           alt=""
         />
         <div class="mt-1">
@@ -54,7 +52,7 @@
         <button
           type="button"
           @click="imageCopy()"
-          class="items-center px-4 py-2 mx-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium "
+          class="items-center px-4 py-2 mx-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium"
         >
           <img
             class="inline w-4"
@@ -165,7 +163,7 @@
                       <span
                         v-if="rpc.light"
                         class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-500 text-white align-middle"
-                        >Light</span
+                        >light</span
                       >
                       <h3
                         class="text-sm leading-6 font-medium text-gray-900"
@@ -257,25 +255,27 @@
 </template>
 
 <script setup>
-import { useApp } from "../composables/useApp";
 import { useRoute, useRouter } from "vue-router";
 import copy from "copy-to-clipboard";
-import domtoimage from 'dom-to-image';
+import domtoimage from "dom-to-image";
+import { onMounted } from "vue";
+import { useApp } from "../composables/useApp";
 import AddRPC from "./AddRPC.vue";
 import Errors from "./Errors.vue";
-import { onMounted } from "vue";
+import { getUrl } from "../helpers/utils";
 const route = useRoute();
 const router = useRouter();
 
 const imageCopy = async () => {
-  var node = document.getElementById('networkTester');
+  var node = document.getElementById("networkTester");
   const blob = await domtoimage.toBlob(node);
   navigator.clipboard.write([
-  new ClipboardItem({
-    [blob.type]: blob,
-  }),
-])
-}
+    // eslint-disable-next-line no-undef
+    new ClipboardItem({
+      [blob.type]: blob,
+    }),
+  ]);
+};
 
 const {
   app,
