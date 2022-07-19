@@ -1,5 +1,5 @@
 <template>
-  <div class="flex font-mono bg-white" v-cloak>
+  <div class="flex font-sans bg-white" v-cloak>
     <NetworkSelect />
     <div class="flex-auto p-4">
       <router-view></router-view>

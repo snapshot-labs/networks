@@ -244,17 +244,6 @@ async function selectNetwork(networkKey) {
   );
   const selectedNetwork = state.selectedNetwork;
   selectedNetwork.rpcStatus = [];
-  selectedNetwork.light?.length &&
-    selectedNetwork.rpcStatus.push(
-      ...selectedNetwork.light.map((rpc, index) => ({
-        url: rpc,
-        index,
-        light: true,
-        status: {
-          loading: true,
-        },
-      }))
-    );
   selectedNetwork.rpcStatus.push(
     ...selectedNetwork.rpc.map((rpc, index) => ({
       url: rpc,
@@ -283,11 +272,15 @@ export function useApp() {
   }
 
   async function getData() {
-    const [networksObj]: any = await Promise.all([
+    const [networksObj, broviderMonitorData]: any = await Promise.all([
       fetch(
         "https://raw.githubusercontent.com/snapshot-labs/snapshot.js/master/src/networks.json"
       ).then((res) => res.json()),
+      fetch("https://brovider.xyz/monitor").then((res) => res.json()),
     ]);
+    Object.keys(broviderMonitorData).forEach((key) => {
+      networksObj[key].rpc = broviderMonitorData[key].map((rpc) => rpc.rpc);
+    });
     state.networks = networksObj;
   }
 

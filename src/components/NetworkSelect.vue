@@ -1,17 +1,25 @@
 <template>
   <div class="relative inline-block text-left w-60 shadow-md">
-    <div class="py-4 px-4 border-b-2">
-      <router-link to="/">
-        <img
-          class="inline w-8"
-          src="https://raw.githubusercontent.com/snapshot-labs/brand/master/icon/icon.svg"
-        />
-        <h2
-          class="inline text-2xl tracking-tight font-bold text-gray-900 ml-3 align-middle"
-        >
-          Networks
-        </h2>
-      </router-link>
+    <div>
+      <div class="py-5 flex justify-center border-b">
+        <router-link to="/">
+          <img
+            class="inline w-6"
+            src="https://raw.githubusercontent.com/snapshot-labs/brand/master/icon/icon.svg"
+          />
+          <h2
+            class="inline text-xl tracking-tight font-semi-bold text-gray-900 ml-2 align-middle"
+          >
+            Networks
+          </h2>
+        </router-link>
+      </div>
+      <!-- <input
+        type="text"
+        placeholder="Search Network"
+        class="p-2 w-full border border-l-0 border-r-0"
+        @input="searchInput"
+      /> -->
     </div>
     <ul>
       <li
@@ -50,6 +58,13 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { useApp } from "../composables/useApp";
 const { app } = useApp();
+// const search = ref("");
+
+// const searchInput = (e) => {
+//   const input = e.target.value;
+//   search.value = input;
+// };
 </script>
