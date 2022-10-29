@@ -189,7 +189,7 @@
               >
                 <a
                   target="blank"
-                  :href="`${app.selectedNetwork.explorer}/block/${rpc.status.latestBlockNumber}`"
+                  :href="`${app.selectedNetwork.explorer.url}/block/${rpc.status.latestBlockNumber}`"
                 >
                   <h2 class="title-font font-medium text-2xl text-gray-900">
                     {{ rpc.status.latestBlockNumber }}
