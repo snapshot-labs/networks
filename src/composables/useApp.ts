@@ -279,6 +279,21 @@ export function useApp() {
       fetch("https://brovider.xyz/monitor").then((res) => res.json()),
     ]);
     Object.keys(broviderMonitorData).forEach((key) => {
+      if (!networksObj[key])
+        networksObj[key] = {
+          key,
+          name: key,
+          shortName: key,
+          chainId: Number(key),
+          network: key,
+          multicall: "",
+          rpc: [],
+          explorer: {
+            url: ""
+          },
+          start: 0,
+          logo: "",
+        };
       networksObj[key].rpc = broviderMonitorData[key].map((rpc) => rpc.rpc);
     });
     state.networks = networksObj;
