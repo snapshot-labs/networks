@@ -53,8 +53,8 @@ const checkBlockAndArchiveNode: any = async (selectedNetwork) => {
       providers[rpcID] = {};
       const connectionInfo =
         typeof rpc.url === "object"
-          ? { ...rpc.url, timeout: 25000 }
-          : { url: rpc.url, timeout: 25000 };
+          ? { ...rpc.url, timeout: 25000, allowGzip: true }
+          : { url: rpc.url, timeout: 25000, allowGzip: true };
       providers[rpcID].provider = new StaticJsonRpcProvider(connectionInfo);
       // providers[rpcID].provider = new StaticJsonRpcProvider(rpc.url)
       provider = providers[rpcID].provider;
