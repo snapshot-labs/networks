@@ -27,7 +27,7 @@ export async function multicall(
   }
 }
 
-export function getUrl(uri, gateway = "cloudflare-ipfs.com") {
+export function getUrl(uri, gateway = "ipfs.snapshot.box") {
   const ipfsGateway = `https://${gateway}`;
   if (!uri) return null;
   if (

@@ -272,13 +272,11 @@ export function useApp() {
   }
 
   async function getData() {
-    const [networksObj, broviderMonitorData]: any = await Promise.all([
-      fetch(
-        "https://raw.githubusercontent.com/snapshot-labs/snapshot.js/master/src/networks.json"
-      ).then((res) => res.json()),
-      fetch("https://brovider.xyz/monitor").then((res) => res.json()),
-    ]);
-    Object.keys(broviderMonitorData).forEach((key) => {
+    const networksObj: any = await fetch(
+      "https://raw.githubusercontent.com/snapshot-labs/snapshot.js/master/src/networks.json"
+    ).then((res) => res.json());
+
+    Object.keys(networksObj).forEach((key) => {
       if (!networksObj[key])
         networksObj[key] = {
           key,
@@ -289,12 +287,11 @@ export function useApp() {
           multicall: "",
           rpc: [],
           explorer: {
-            url: ""
+            url: "",
           },
           start: 0,
           logo: "",
         };
-      networksObj[key].rpc = broviderMonitorData[key].map((rpc) => rpc.rpc);
     });
     state.networks = networksObj;
   }
